@@ -11,7 +11,8 @@ This project includes unmodified official dependency distributions:
 | System.ComponentModel.Annotations | 5.0.0 | MIT | https://www.nuget.org/packages/System.ComponentModel.Annotations/5.0.0 |
 | System.Runtime.CompilerServices.Unsafe | 6.0.0 | MIT | https://www.nuget.org/packages/System.Runtime.CompilerServices.Unsafe/6.0.0 |
 | System.Threading.Channels | 8.0.0 | MIT | https://www.nuget.org/packages/System.Threading.Channels/8.0.0 |
+| Zen Kaku Gothic New Regular | Google Fonts distribution | SIL Open Font License 1.1 | https://github.com/google/fonts/tree/main/ofl/zenkakugothicnew |
 
 VContainer's license is included under `Packages/jp.hadashikick.vcontainer/LICENSE.md`.
 NuGet metadata is retained alongside DLLs in `Assets/Plugins/R3`. Full license texts are included in that folder.
-Unity and Unity packages retain their respective license terms. The game uses Unity's built-in runtime font.
+Unity and Unity packages retain their respective license terms. The title uses Unity's built-in runtime font. Japanese text uses the bundled Zen Kaku Gothic New font, with its license in `Assets/LandoltRush/Fonts/OFL.txt`.

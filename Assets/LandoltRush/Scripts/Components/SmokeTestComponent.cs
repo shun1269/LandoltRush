@@ -34,14 +34,19 @@ namespace LandoltRush
             rod.TestPosition=new Vector2(6,-3);rod.Sample(Scope.RodParam);
             presenter.Spawn(new RingSpawnData{Position=new Vector2(-9.3f,2),Velocity=new Vector2(25,0),Scale=1,AngularVelocity=30});
             yield return new WaitForSecondsRealtime(.9f);
-            if(!Require(data.MissCount==1&&data.Score==0&&data.ComboCount==0,"miss",directory))yield break;
+            if(!Require(data.MissCount==1&&data.Lives==2&&data.Score==0&&data.ComboCount==0,"miss",directory))yield break;
             Scope.Input.Emit(GameCommand.Restart);
-            rod.TestPosition=new Vector2(-1.3f,0);rod.Sample(Scope.RodParam);presenter.Spawn(StaticRing());rod.TestPosition=new Vector2(-.73f,0);
-            yield return null;yield return null;
+            for(int i=0;i<3;i++)
+            {
+                rod.TestPosition=new Vector2(-1.3f,0);rod.Sample(Scope.RodParam);presenter.Spawn(StaticRing());rod.TestPosition=new Vector2(-.73f,0);
+                yield return null;yield return null;
+                if(!Require(data.Lives==2-i,"life lost on tip contact",directory))yield break;
+            }
+            yield return new WaitForSecondsRealtime(.7f);
             if(!Require(data.Phase==GamePhase.Finished&&Scope.Result.Root.activeSelf,"game over panel",directory))yield break;
             yield return Capture(directory,"03-result.png");
             Scope.Input.RestartButton.onClick.Invoke();yield return null;
-            if(!Require(data.Phase==GamePhase.Playing&&data.Score==0&&data.MissCount==0,"restart",directory))yield break;
+            if(!Require(data.Phase==GamePhase.Playing&&data.Lives==3&&data.Score==0&&data.MissCount==0,"restart",directory))yield break;
             Scope.Input.Emit(GameCommand.Title);yield return null;
             if(!Require(data.Phase==GamePhase.Title&&Scope.UI.TitleRoot.activeSelf,"title",directory))yield break;
             File.WriteAllText(Path.Combine(directory,"result.txt"),"PASS: title, start, success, combo, pause, miss, game over, restart, return to title.\nScreenshots captured from the Windows player.\n");

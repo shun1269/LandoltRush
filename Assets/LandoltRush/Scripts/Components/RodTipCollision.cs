@@ -15,12 +15,11 @@ namespace LandoltRush
             {
                 if(ring==null||ring.Resolved)continue;
                 HitKind hit=Evaluate(rod,ring,tip,param);
-                // Check every ring before emitting nonfatal outcomes. A tip collision
-                // anywhere in this frame takes priority over all misses and successes.
-                if(hit==HitKind.Black){detected.OnNext(new RingContact(ring,hit));return;}
                 if(hit!=HitKind.None)contacts.Add(new RingContact(ring,hit));
             }
-            foreach(var contact in contacts)if(contact.Kind==HitKind.Shaft)detected.OnNext(contact);
+            // Every touched ring is one miss. Resolve damage before awarding successes;
+            // the presenter ignores further events once the last life has been lost.
+            foreach(var contact in contacts)if(contact.Kind!=HitKind.Gap)detected.OnNext(contact);
             foreach(var contact in contacts)if(contact.Kind==HitKind.Gap)detected.OnNext(contact);
         }
         public static HitKind Evaluate(RodController rod,LandoltRingComponent ring,RodParam tip,RingParam param)

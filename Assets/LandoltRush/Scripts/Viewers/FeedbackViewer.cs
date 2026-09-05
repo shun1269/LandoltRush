@@ -5,20 +5,22 @@ namespace LandoltRush
     public sealed class FeedbackViewer : MonoBehaviour
     {
         public Text Popup;
-        public Image Flash;
+        public DamageBorderGraphic Border;
         public LineRenderer Burst;
-        float age=2; Vector2 origin; Color tint;
-        public void Play(Vector2 position,string message,Color color)
-        {origin=position;tint=color;age=0;Popup.text=message;Popup.color=color;Burst.startColor=Burst.endColor=color;}
-        public void Clear(){age=2;Popup.text="";Flash.color=Color.clear;Burst.positionCount=0;}
-        void Update()
+        float successAge=2,missAge=2;Vector2 origin;
+        static readonly Color Teal=new Color(0,.51f,.44f),Red=new Color(.83f,.17f,.15f);
+        public void Success(Vector2 position){origin=position;successAge=0;Advance(0);}
+        public void Damage(){missAge=0;Popup.text="ミス";Advance(0);}
+        public void Clear(){successAge=missAge=2;Popup.text="";Border.color=Color.clear;Burst.positionCount=0;}
+        void Update()=>Advance(Time.unscaledDeltaTime);
+        public void Advance(float delta)
         {
-            age+=Time.unscaledDeltaTime;float a=Mathf.Clamp01(1-age/.65f);
-            Popup.color=new Color(tint.r,tint.g,tint.b,a);
-            Flash.color=new Color(tint.r,tint.g,tint.b,a*.09f);
+            successAge+=delta;missAge+=delta;float a=Mathf.Clamp01(1-successAge/.55f),damage=Mathf.Clamp01(1-missAge/.55f);
+            Popup.color=new Color(Red.r,Red.g,Red.b,Mathf.Clamp01(1-missAge/.7f));
+            Border.color=new Color(Red.r,Red.g,Red.b,.65f*damage*damage);
             Burst.positionCount=a>0?64:0;Burst.loop=true;
-            Burst.startColor=Burst.endColor=new Color(tint.r,tint.g,tint.b,a*.6f);
-            for(int i=0;i<Burst.positionCount;i++)Burst.SetPosition(i,origin+RingGeometry.Polar(.2f+age*2.2f,i*360f/64));
+            Burst.startColor=Burst.endColor=new Color(Teal.r,Teal.g,Teal.b,a*.5f);
+            for(int i=0;i<Burst.positionCount;i++)Burst.SetPosition(i,origin+RingGeometry.Polar(.2f+successAge*2.2f,i*360f/64));
         }
     }
 }

@@ -13,8 +13,8 @@ namespace LandoltRush
             for(int i=0;i<count;i++){float t=(float)i/count;phase+=Mathf.Lerp(start,end,t)*2*Mathf.PI/44100;samples[i]=Mathf.Sin(phase)*Mathf.Sin(Mathf.PI*t)*Mathf.Pow(1-t,.5f);}
             var clip=AudioClip.Create(name,count,1,44100,false);clip.SetData(samples,0);return clip;
         }
-        public void Play(HitKind kind){if(!Muted)source.PlayOneShot(kind==HitKind.Gap?success:kind==HitKind.Black?failure:miss);}
-        public void Toggle(){Muted=!Muted;source.mute=Muted;}
+        public void Play(HitKind kind){if(Application.isPlaying&&!Muted)source.PlayOneShot(kind==HitKind.Gap?success:kind==HitKind.Black?failure:miss);}
+        public void Toggle(){Muted=!Muted;if(source)source.mute=Muted;}
         void OnDestroy(){if(success)Destroy(success);if(failure)Destroy(failure);if(miss)Destroy(miss);}
     }
 }

@@ -1,2 +1,2 @@
-PASS — 2063 assertions
-Inner-radius entry, swept shaft, multi-ring priority and lifecycle, six-second combo, timed spawn ramp, pause/restart, randomized spawn bounds.
+PASS — 2169 assertions
+Three lives, contact/escape damage, duplicate prevention, final-life transition, restart, Japanese UI/glyphs, hearts, combo background, swept collisions and timed multi-ring spawns.

@@ -6,6 +6,7 @@ namespace LandoltRush
     {
         public int BaseScore = 100;
         public int ComboBonusScore = 20;
+        [Range(1,3)] public int MaxLives = 3;
         [Min(0.1f)] public float ComboLimitTime = 6f;
         public float FirstSpawnDelay = .6f;
         [Min(.1f)] public float InitialSpawnInterval = 4f;

@@ -41,14 +41,18 @@ namespace LandoltRush.Editor
                 new Vector2(0,2),new Vector2(0,-2),0,0,1,.55f,.9f,50),"Moving ring contacts stationary shaft");
             var obj=new GameObject("Verification data");var data=obj.AddComponent<GameData>();
             var config=ScriptableObject.CreateInstance<GameConfig>();var spawn=ScriptableObject.CreateInstance<SpawnParam>();var ring=ScriptableObject.CreateInstance<RingParam>();
-            var combo=new ComboSystem(data,config);var score=new ScoreSystem(data,config);var judge=new GameJudgeSystem(data);judge.Start();
+            var combo=new ComboSystem(data,config);var score=new ScoreSystem(data,config);var judge=new GameJudgeSystem(data,config);judge.Start();
+            Check(data.Lives==3,"Start with three lives");
             combo.Add();Check(score.AddSuccess()==100,"First score");combo.Tick(9,false);Check(data.ComboCount==1&&data.ComboRemainingTime==6,"Empty field freezes six-second combo");
             combo.Tick(.5f,true);combo.Add();Check(score.AddSuccess()==120&&data.Score==220,"Combo scoring");
             combo.Tick(2.1f,true);Check(data.ComboCount==2,"Combo survives more than two seconds");
             combo.Tick(4f,true);Check(data.ComboCount==0&&data.MaxCombo==2,"Combo expiration retains maximum");
             combo.Add();judge.Miss();combo.Reset();Check(data.MissCount==1&&data.Score==220&&data.ComboCount==0,"Miss resets only combo");
-            Check(judge.Finish()&&!judge.Finish()&&data.Result==ResultType.GameOver,"Game over only once");
-            judge.Start();Check(data.Score==0&&data.SuccessCount==0&&data.MissCount==0&&data.Phase==GamePhase.Playing,"Restart clears run state");
+            Check(data.Lives==2&&data.Phase==GamePhase.Playing,"First miss costs one life");
+            judge.Miss();Check(data.Lives==1&&data.Phase==GamePhase.Playing,"Second miss keeps game running");
+            judge.Miss();Check(data.Lives==0&&data.Phase==GamePhase.Finished&&data.Result==ResultType.GameOver,"Third miss finishes game");
+            Check(!judge.Miss()&&data.Lives==0&&data.MissCount==3,"No damage after game ends");
+            judge.Start();Check(data.Lives==3&&data.Score==0&&data.SuccessCount==0&&data.MissCount==0&&data.Phase==GamePhase.Playing,"Restart restores lives and clears run state");
             judge.Pause(true);Check(data.Phase==GamePhase.Paused,"Pause");judge.Pause(false);judge.Title();Check(data.Phase==GamePhase.Title,"Return to title");
             var tempo=new SpawnTempoSystem(data,config);judge.Start();
             Check(Mathf.Approximately(tempo.Interval,4),"Initial spawn interval");tempo.Tick(45);
@@ -74,7 +78,7 @@ namespace LandoltRush.Editor
             comp.Advance(5);comp.CheckExit(bounds);Check(comp.Resolved,"Miss after fully exiting");
             VerifyMultipleRings();
             UnityEngine.Object.DestroyImmediate(ringObject);UnityEngine.Object.DestroyImmediate(obj);UnityEngine.Object.DestroyImmediate(config);UnityEngine.Object.DestroyImmediate(spawn);UnityEngine.Object.DestroyImmediate(ring);
-            Directory.CreateDirectory("Builds");File.WriteAllText("Builds/verification.txt",$"PASS — {checks} assertions\nInner-radius entry, swept shaft, multi-ring priority and lifecycle, six-second combo, timed spawn ramp, pause/restart, randomized spawn bounds.\n");
+            Directory.CreateDirectory("Builds");File.WriteAllText("Builds/verification.txt",$"PASS — {checks} assertions\nThree lives, contact/escape damage, duplicate prevention, final-life transition, restart, Japanese UI/glyphs, hearts, combo background, swept collisions and timed multi-ring spawns.\n");
             Debug.Log($"LANDOLT_TESTS_PASSED: {checks}");
         }
         static bool Shaft(Vector2 pivot,Vector2 from,Vector2 to,float turn=0)=>RingGeometry.SweepShaft(pivot,pivot,from,to,.018f,Vector2.zero,Vector2.zero,0,turn,1,.55f,.9f,50);
@@ -93,10 +97,10 @@ namespace LandoltRush.Editor
                 rod.TestPosition=direction*.45f;rod.Sample(scope.RodParam);safe.Advance(0);
                 scope.Collision.Check(rod,spawner.Rings,scope.RodParam,scope.RingParam);
                 Check(events.Count==1&&events[0].Kind==HitKind.Gap,"Aligned shaft and inward tip succeed");events.Clear();
-                // A second ring lies on the tip's path with its solid side facing the tip.
+                // Damage contacts are emitted before successful entries on other rings.
                 var dangerous=spawner.Spawn(new RingSpawnData{Position=direction*1.7f,Scale=1,Angle=angle},scope.RingParam);
                 scope.Collision.Check(rod,spawner.Rings,scope.RodParam,scope.RingParam);
-                Check(events.Count==1&&events[0].Kind==HitKind.Black&&events[0].Ring==dangerous,"Fatal hit on second ring suppresses first-ring success");
+                Check(events.Count==2&&events[0].Kind==HitKind.Black&&events[0].Ring==dangerous&&events[1].Kind==HitKind.Gap,"Damage on second ring precedes first-ring success");
                 Check(spawner.Rings.Count==2,"Spawn keeps existing ring");
                 spawner.Remove(dangerous);Check(spawner.Rings.Count==1&&spawner.Rings[0]==safe,"Removing one ring keeps the other");
                 spawner.StopAll();Check(safe.Resolved,"Game over freezes all remaining rings");spawner.Clear();events.Clear();
@@ -107,6 +111,7 @@ namespace LandoltRush.Editor
                 spawner.Clear();Check(spawner.Rings.Count==0,"Clear removes every ring");rod.TestPosition=null;rod.SetActive(false,scope.RodParam);
             }
             VerifySpawnSchedule(scope);
+            VerifyLivesAndUI(scope);
         }
         static void VerifySpawnSchedule(GameLifetimeScope scope)
         {
@@ -114,7 +119,7 @@ namespace LandoltRush.Editor
             var combo=new ComboSystem(data,config);var tempo=new SpawnTempoSystem(data,config);
             using(var presenter=new GameMainPresentator(data,config,scope.RodParam,scope.RingParam,rod,scope.Collision,spawner,
                 scope.UI,scope.Result,scope.Input,scope.Feedback,scope.Sound,new RingSpawnSystem(scope.SpawnParam,scope.RingParam),
-                combo,new ScoreSystem(data,config),new GameJudgeSystem(data),scope.Title,tempo))
+                combo,new ScoreSystem(data,config),new GameJudgeSystem(data,config),scope.Title,tempo))
             {
                 presenter.Start();rod.TestPosition=new Vector2(6,-3);scope.Input.Emit(GameCommand.Start);
                 presenter.Step(config.FirstSpawnDelay);Check(spawner.Rings.Count==1,"Automatic first spawn");
@@ -135,6 +140,49 @@ namespace LandoltRush.Editor
                 scope.Input.Emit(GameCommand.Title);Check(spawner.Rings.Count==0&&data.Phase==GamePhase.Title,"Title clears all active rings");
                 rod.TestPosition=null;
             }
+        }
+        static void VerifyLivesAndUI(GameLifetimeScope scope)
+        {
+            var d=scope.Data;var c=scope.Config;var rod=scope.Rod;var spawner=scope.Spawner;
+            using(var p=new GameMainPresentator(d,c,scope.RodParam,scope.RingParam,rod,scope.Collision,spawner,
+                scope.UI,scope.Result,scope.Input,scope.Feedback,scope.Sound,new RingSpawnSystem(scope.SpawnParam,scope.RingParam),
+                new ComboSystem(d,c),new ScoreSystem(d,c),new GameJudgeSystem(d,c),scope.Title,new SpawnTempoSystem(d,c)))
+            {
+                p.Start();rod.TestPosition=new Vector2(6,-3);scope.Input.Emit(GameCommand.Start);
+                Check(scope.UI.Hearts.Length==3&&scope.UI.Hearts[2].Filled,"Three filled hearts at start");
+                p.Spawn(new RingSpawnData{Position=Vector2.Lerp(rod.Tip,rod.Pivot,.3f),Scale=1});p.Step(0);
+                Check(d.Lives==2&&d.MissCount==1&&d.Phase==GamePhase.Playing,"Shaft contact damages once");
+                Check(!scope.UI.Hearts[2].Filled&&scope.UI.Hearts[1].Filled,"Heart removed on damage");
+                Check(scope.Feedback.Popup.text=="ミス"&&scope.Feedback.Border.color.a>0,"Japanese miss and red border");
+                p.Step(0);Check(d.Lives==2&&d.MissCount==1,"Resolved contact cannot damage twice");
+                scope.Feedback.Advance(.7f);Check(scope.Feedback.Border.color.a==0,"Damage border fades away");
+                rod.TestPosition=new Vector2(-1.3f,0);rod.SetActive(true,scope.RodParam);
+                p.Spawn(new RingSpawnData{Position=Vector2.zero,Scale=1});rod.TestPosition=new Vector2(-.73f,0);p.Step(0);
+                Check(d.Lives==1&&d.Phase==GamePhase.Playing,"Tip contact now loses a life instead of ending immediately");
+                d.Score=480;d.MaxCombo=4;
+                var bounds=rod.Bounds;
+                p.Spawn(new RingSpawnData{Position=new Vector2(bounds.xMin+1,bounds.yMax-1.5f),Velocity=new Vector2((bounds.width+4)*5,0),Scale=1});p.Step(.001f);p.Step(.2f);
+                Check(d.Lives==0&&d.Phase==GamePhase.Finished&&d.MissCount==3,$"Escaped ring consumes last life (lives {d.Lives}, misses {d.MissCount}, phase {d.Phase})");
+                Check(!scope.Result.Root.activeSelf&&!rod.CanMove,"Last hit freezes play before result transition");
+                p.Step(.61f);Check(scope.Result.Root.activeSelf&&scope.Result.Score.text=="480"&&scope.Result.MaxCombo.text=="4","Result shows score and max combo");
+                scope.Input.Emit(GameCommand.Restart);
+                Check(d.Lives==3&&scope.UI.Hearts[2].Filled&&!scope.Result.Root.activeSelf&&scope.Feedback.Border.color.a==0,"Restart resets lives, result and damage feedback");
+                rod.TestPosition=new Vector2(6,-3);rod.SetActive(true,scope.RodParam);
+                for(int i=1;i<=3;i++)p.Spawn(new RingSpawnData{Position=Vector2.Lerp(rod.Tip,rod.Pivot,i*.2f),Scale=1});
+                p.Step(0);Check(d.Lives==0&&d.MissCount==3,"Three simultaneous misses consume exactly three lives");
+                p.Step(1);Check(d.Lives==0&&d.MissCount==3,"Finished session ignores further damage");
+                scope.Input.Emit(GameCommand.Title);rod.TestPosition=null;
+            }
+            foreach(var text in scope.UI.GetComponentsInChildren<UnityEngine.UI.Text>(true))
+            {
+                Check(text.text=="Landolt Rush"||!System.Text.RegularExpressions.Regex.IsMatch(text.text,"[A-Za-z]"),"All non-title UI text is Japanese");
+                if(text.text=="Landolt Rush")continue;
+                text.font.RequestCharactersInTexture(text.text,text.fontSize,text.fontStyle);
+                foreach(char ch in text.text)if(ch>127)Check(text.font.HasCharacter(ch),"Japanese glyph exists: "+ch);
+            }
+            foreach(var graphic in scope.UI.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+                Check(graphic.GetComponent<CanvasRenderer>()!=null,"UI graphic has a renderer: "+graphic.name);
+            Check(scope.UI.ComboText.fontSize>=200&&scope.UI.ComboRoot.GetComponent<Canvas>().renderMode==RenderMode.WorldSpace,"Large combo rendered behind rings");
         }
     }
 }

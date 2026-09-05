@@ -21,6 +21,7 @@ namespace LandoltRush
         public int Score, ComboCount, MaxCombo, SuccessCount, MissCount;
         public float ComboRemainingTime;
         public float ElapsedPlayTime;
+        public int Lives;
     }
 
     public struct RingSpawnData

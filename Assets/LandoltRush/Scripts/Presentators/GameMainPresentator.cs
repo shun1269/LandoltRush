@@ -15,8 +15,7 @@ namespace LandoltRush
         readonly SpawnTempoSystem tempo;
         readonly CompositeDisposable subscriptions=new CompositeDisposable();
         readonly Dictionary<LandoltRingComponent,IDisposable> ringSubscriptions=new Dictionary<LandoltRingComponent,IDisposable>();
-        float spawnDelay;bool hadFocus=true;
-        static readonly Color Teal=new Color(.0f,.57f,.48f),Red=new Color(.87f,.22f,.20f);
+        float spawnDelay,resultDelay=-1;bool hadFocus=true;
         public GameMainPresentator(GameData data,GameConfig config,RodParam rodParam,RingParam ringParam,
             RodController rod,RodTipCollision collision,LandoltRingSpawner spawner,GameUIViewer ui,ResultPanelViewer result,
             GameInputInfo input,FeedbackViewer feedback,SoundComponent sound,RingSpawnSystem spawnSystem,
@@ -48,12 +47,12 @@ namespace LandoltRush
         void StartGame()
         {
             ClearRings();judge.Start();result.Hide();feedback.Clear();title.gameObject.SetActive(false);
-            rod.SetActive(true,rodParam);spawnDelay=config.FirstSpawnDelay;ui.Status("REACH INSIDE THE RING / KEEP THE SHAFT CLEAR");ui.Refresh(data,config);
+            rod.SetActive(true,rodParam);spawnDelay=config.FirstSpawnDelay;resultDelay=-1;ui.Refresh(data,config);
         }
         void ShowTitle()
         {
             ClearRings();judge.Title();result.Hide();feedback.Clear();rod.SetActive(false,rodParam);
-            title.gameObject.SetActive(true);ui.Refresh(data,config);
+            resultDelay=-1;title.gameObject.SetActive(true);ui.Refresh(data,config);
         }
         void Pause(bool paused)
         {
@@ -68,6 +67,11 @@ namespace LandoltRush
         }
         public void Step(float deltaTime)
         {
+            if(data.Phase==GamePhase.Finished&&resultDelay>=0)
+            {
+                resultDelay-=Mathf.Max(0,deltaTime);
+                if(resultDelay<=0){resultDelay=-1;result.Show(data);}
+            }
             if(data.Phase!=GamePhase.Playing)return;
             float dt=Mathf.Max(0,deltaTime);rod.Sample(rodParam);
             tempo.Tick(dt);
@@ -90,34 +94,23 @@ namespace LandoltRush
         public void Spawn(RingSpawnData spawn)
         {
             var ring=spawner.Spawn(spawn,ringParam);
-            ringSubscriptions.Add(ring,ring.OnExited.Subscribe(_=>Miss(ring,false)));
+            ringSubscriptions.Add(ring,ring.OnExited.Subscribe(_=>Miss(ring)));
         }
         void Hit(RingContact contact)
         {
             var ring=contact.Ring;var hit=contact.Kind;
             if(data.Phase!=GamePhase.Playing||ring==null||ring.Resolved||!ringSubscriptions.ContainsKey(ring))return;
-            if(hit==HitKind.Shaft){Miss(ring,true);return;}
+            if(hit!=HitKind.Gap){Miss(ring);return;}
             ring.Resolve();
-            if(hit==HitKind.Black)
-            {
-                if(!judge.Finish())return;rod.Freeze();spawner.StopAll();sound.Play(hit);
-                feedback.Play(rod.Tip,"CONTACT",Red);ui.Status("RUN COMPLETE");result.Show(data);
-            }
-            else
-            {
-                combo.Add();int points=score.AddSuccess();sound.Play(hit);
-                feedback.Play(ring.Position,$"+{points}   /   NICE GAP",Teal);
-                ui.Status(data.ComboCount>1?$"KEEP IT FLOWING  /  {data.ComboCount} IN A ROW":"NICE. FIND THE NEXT GAP.");
-                RemoveRing(ring);
-            }
+            combo.Add();score.AddSuccess();sound.Play(hit);feedback.Success(ring.Position);RemoveRing(ring);
         }
-        void Miss(LandoltRingComponent ring,bool shaft)
+        void Miss(LandoltRingComponent ring)
         {
             if(data.Phase!=GamePhase.Playing||ring==null||!ringSubscriptions.ContainsKey(ring))return;
-            judge.Miss();combo.Reset();sound.Play(HitKind.None);
-            ui.Status(shaft?"SHAFT CONTACT / MISS / COMBO RESET":"MISSED / COMBO RESET — KEEP GOING");
-            if(shaft)feedback.Play(ring.Position,"MISS / SHAFT CONTACT",new Color(.8f,.43f,.1f));
+            if(!judge.Miss())return;
+            combo.Reset();sound.Play(HitKind.Black);feedback.Damage();
             RemoveRing(ring);
+            if(data.Phase==GamePhase.Finished){rod.Freeze();spawner.StopAll();resultDelay=.6f;}
         }
         void RemoveRing(LandoltRingComponent ring)
         {
