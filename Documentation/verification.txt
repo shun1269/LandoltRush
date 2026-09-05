@@ -1,2 +1,3 @@
-PASS — 2169 assertions
+PASS — 3233 assertions
+Minimum scale 1.2, at least three fully visible rotations across 520 sampled trajectories, travel-time boundaries and rotation-limit override.
 Three lives, contact/escape damage, duplicate prevention, final-life transition, restart, Japanese UI/glyphs, hearts, combo background, swept collisions and timed multi-ring spawns.

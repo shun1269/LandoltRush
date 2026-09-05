@@ -19,7 +19,7 @@ MonoBehaviour:
   TargetAreaRate: 0.45
   MinMoveSpeed: 1.5
   MaxMoveSpeed: 3
-  MinScale: 0.8
-  MaxScale: 1.3
-  MinRotateSpeed: 30
-  MaxRotateSpeed: 180
+  MinScale: 1.2
+  MaxScale: 1.6
+  MinRotateSpeed: 180
+  MaxRotateSpeed: 360

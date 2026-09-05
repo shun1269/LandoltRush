@@ -63,23 +63,47 @@ namespace LandoltRush.Editor
             judge.Title();float elapsed=data.ElapsedPlayTime;tempo.Tick(20);Check(data.ElapsedPlayTime==elapsed,"Title freezes acceleration");
             judge.Start();Check(data.ElapsedPlayTime==0&&Mathf.Approximately(tempo.Interval,4),"Restart resets spawn acceleration");
             var bounds=new Rect(-8,-4.5f,16,9);var system=new RingSpawnSystem(spawn,ring);int top=0,left=0;
+            Check(Mathf.Approximately(RingSpawnSystem.VisibleTravelTime(bounds,new Vector2(-10,0),new Vector2(2,0),1),7),"Horizontal fully visible travel time");
+            Check(Mathf.Approximately(RingSpawnSystem.VisibleTravelTime(bounds,new Vector2(0,6),new Vector2(0,-2),1),3.5f),"Vertical fully visible travel time");
+            Check(Mathf.Approximately(RingSpawnSystem.VisibleTravelTime(new Rect(-5,-5,10,10),new Vector2(-6,-6),new Vector2(2,2),1),4),"Diagonal fully visible travel time");
+            Check(RingSpawnSystem.VisibleTravelTime(bounds,Vector2.zero,Vector2.zero,1)==0,"Stationary travel has no finite passage");
             for(int i=0;i<500;i++)
             {
                 var d=system.Create(bounds);if(d.Side==SpawnSide.Top)top++;else left++;
                 Check(bounds.Contains(d.Target),"Target inside screen");
                 Check(d.Side==SpawnSide.Top?d.Position.y-ring.OuterRadius*d.Scale>bounds.yMax:d.Position.x+ring.OuterRadius*d.Scale<bounds.xMin,"Fully offscreen spawn");
                 Check(Vector2.Dot(d.Target-d.Position,d.Velocity)>0,"Moves towards target");
-                Check(d.Scale>=.8f&&d.Scale<=1.3f&&Mathf.Abs(d.AngularVelocity)>=30&&Mathf.Abs(d.AngularVelocity)<=180,"Random parameter limits");
+                Check(d.Scale>=1.2f&&d.Scale<=1.6f&&Mathf.Abs(d.AngularVelocity)>=180,"Larger minimum size and faster minimum rotation");
+                VerifyVisibleRotations(d,bounds,ring.OuterRadius*d.Scale);
             }
             Check(top>150&&left>150,"Both spawn sides");
+            // Even a low Inspector maximum must not defeat the three-turn requirement.
+            spawn.MinRotateSpeed=30;spawn.MaxRotateSpeed=30;spawn.MinMoveSpeed=3;spawn.MaxMoveSpeed=3;
+            for(int i=0;i<20;i++)
+            {
+                var d=system.Create(bounds);Check(Mathf.Abs(d.AngularVelocity)>30,"Travel requirement overrides configured rotation maximum");
+                VerifyVisibleRotations(d,bounds,ring.OuterRadius*d.Scale);
+            }
             var ringObject=new GameObject("Entry verification");var comp=ringObject.AddComponent<LandoltRingComponent>();comp.Viewer=ringObject.AddComponent<RingViewer>();
             comp.Initialize(new RingSpawnData{Position=new Vector2(-10,0),Velocity=new Vector2(4,0),Scale=1},ring);
             comp.CheckExit(bounds);Check(!comp.Entered&&!comp.Resolved,"No premature miss at spawn");comp.Advance(1);comp.CheckExit(bounds);Check(comp.Entered&&!comp.Resolved,"Entry state");
             comp.Advance(5);comp.CheckExit(bounds);Check(comp.Resolved,"Miss after fully exiting");
             VerifyMultipleRings();
             UnityEngine.Object.DestroyImmediate(ringObject);UnityEngine.Object.DestroyImmediate(obj);UnityEngine.Object.DestroyImmediate(config);UnityEngine.Object.DestroyImmediate(spawn);UnityEngine.Object.DestroyImmediate(ring);
-            Directory.CreateDirectory("Builds");File.WriteAllText("Builds/verification.txt",$"PASS — {checks} assertions\nThree lives, contact/escape damage, duplicate prevention, final-life transition, restart, Japanese UI/glyphs, hearts, combo background, swept collisions and timed multi-ring spawns.\n");
+            Directory.CreateDirectory("Builds");File.WriteAllText("Builds/verification.txt",$"PASS — {checks} assertions\nMinimum scale 1.2, at least three fully visible rotations across 520 sampled trajectories, travel-time boundaries and rotation-limit override.\nThree lives, contact/escape damage, duplicate prevention, final-life transition, restart, Japanese UI/glyphs, hearts, combo background, swept collisions and timed multi-ring spawns.\n");
             Debug.Log($"LANDOLT_TESTS_PASSED: {checks}");
+        }
+        static void VerifyVisibleRotations(RingSpawnData data,Rect bounds,float radius)
+        {
+            // Independently sample the path instead of reusing the production clipping formula.
+            const float step=1f/240f;int visibleSteps=0;
+            for(int i=0;i<30*240;i++)
+            {
+                Vector2 p=data.Position+data.Velocity*(i*step);
+                if(p.x-radius>=bounds.xMin&&p.x+radius<=bounds.xMax&&p.y-radius>=bounds.yMin&&p.y+radius<=bounds.yMax)visibleSteps++;
+            }
+            Check(visibleSteps>0,"Generated ring fully enters viewport");
+            Check((visibleSteps+2)*step*Mathf.Abs(data.AngularVelocity)>=1080f,"At least three fully visible turns (two sample tolerance)");
         }
         static bool Shaft(Vector2 pivot,Vector2 from,Vector2 to,float turn=0)=>RingGeometry.SweepShaft(pivot,pivot,from,to,.018f,Vector2.zero,Vector2.zero,0,turn,1,.55f,.9f,50);
         static void VerifyMultipleRings()
