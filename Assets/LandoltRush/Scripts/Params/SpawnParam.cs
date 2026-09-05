@@ -9,7 +9,9 @@ namespace LandoltRush
         [Range(.1f,.8f)] public float TargetAreaRate = .45f;
         public float MinMoveSpeed = 1.5f, MaxMoveSpeed = 3f;
         public float MinScale = 1.2f, MaxScale = 1.6f;
-        [Tooltip("Degrees per second. Raised automatically when needed for three visible turns.")]
+        [Tooltip("回転速度（度/秒）。最低回転数に届かない場合は上限を超えて補正します。")]
         public float MinRotateSpeed = 180f, MaxRotateSpeed = 240f;
+        [Min(0), Tooltip("環全体が画面内にある間の最低回転数。0で補正を無効にします。")]
+        public float MinVisibleRotations = 2f;
     }
 }

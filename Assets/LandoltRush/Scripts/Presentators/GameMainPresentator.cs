@@ -102,7 +102,7 @@ namespace LandoltRush
             if(data.Phase!=GamePhase.Playing||ring==null||ring.Resolved||!ringSubscriptions.ContainsKey(ring))return;
             if(hit!=HitKind.Gap){Miss(ring);return;}
             ring.Resolve();
-            combo.Add();score.AddSuccess();sound.Play(hit);feedback.Success(ring.Position);RemoveRing(ring);
+            combo.Add();score.AddSuccess();sound.Play(hit);feedback.Success(ring.Position,ring.Angle,ring.Scale,rod.Bounds);RemoveRing(ring);
         }
         void Miss(LandoltRingComponent ring)
         {

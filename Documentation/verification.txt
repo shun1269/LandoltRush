@@ -1,3 +1,4 @@
-PASS — 3233 assertions
-Minimum scale 1.2, at least three fully visible rotations across 520 sampled trajectories, travel-time boundaries and rotation-limit override.
+PASS — 4189 assertions
+Minimum scale 1.2, at least two fully visible turns across 500 sampled trajectories, baseline rotation 180-240 degrees per second, travel correction and unchanged movement speeds.
+Success dive: actual capture, shape/orientation, screen-filling expansion, fade, overlapping captures, bounded reuse, expiry and restart/title cleanup.
 Three lives, contact/escape damage, duplicate prevention, final-life transition, restart, Japanese UI/glyphs, hearts, combo background, swept collisions and timed multi-ring spawns.

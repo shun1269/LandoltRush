@@ -11,7 +11,13 @@ namespace LandoltRush.Editor
     {
         public static void PrepareVerifyAndRender()
         {
-            try{GameProjectBuilder.CreateScene();GameVerification.Run();RenderAll();Debug.Log("LANDOLT_UI_PREVIEWS_READY");EditorApplication.Exit(0);}
+            try
+            {
+                UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/GameScene.unity");
+                GameVerification.Run();
+                GameProjectBuilder.CreateScene();GameVerification.Run();RenderAll();
+                Debug.Log("LANDOLT_UI_PREVIEWS_READY");EditorApplication.Exit(0);
+            }
             catch(Exception e){Debug.LogException(e);EditorApplication.Exit(1);}
         }
         public static void RenderAll()
@@ -28,10 +34,19 @@ namespace LandoltRush.Editor
             Capture(camera,canvas,"01-title");
             scope.Title.gameObject.SetActive(false);data.Phase=GamePhase.Playing;data.Lives=3;data.Score=1680;data.ComboCount=12;data.MaxCombo=12;data.ComboRemainingTime=4.2f;
             scope.UI.Refresh(data,scope.Config);
-            scope.Spawner.Spawn(new RingSpawnData{Position=new Vector2(2,.3f),Scale=scope.SpawnParam.MinScale,Angle=-30},scope.RingParam);
+            var captured=scope.Spawner.Spawn(new RingSpawnData{Position=new Vector2(2,.3f),Scale=scope.SpawnParam.MinScale,Angle=-30},scope.RingParam);
             scope.Spawner.Spawn(new RingSpawnData{Position=new Vector2(-3,1.5f),Scale=scope.SpawnParam.MaxScale,Angle=-75},scope.RingParam);
             scope.Rod.TestPosition=new Vector2(2.8f,-.2f);scope.Rod.SetActive(true,scope.RodParam);
             Capture(camera,canvas,"02-playing");
+            scope.Feedback.Success(captured.Position,captured.Angle,captured.Scale,scope.Rod.Bounds);scope.Spawner.Remove(captured);
+            Directory.CreateDirectory("Builds/UIPreviews/SuccessDive");
+            for(int i=0;i<=30;i++)
+            {
+                if(i>0)scope.Feedback.Advance(.02f);
+                Capture(camera,canvas,"SuccessDive/frame-"+i.ToString("D2"));
+            }
+            scope.Feedback.Clear();
+            scope.Spawner.Spawn(new RingSpawnData{Position=new Vector2(2,.3f),Scale=scope.SpawnParam.MinScale,Angle=-30},scope.RingParam);
             data.Lives=2;data.ComboCount=0;data.ComboRemainingTime=0;scope.UI.Refresh(data,scope.Config);scope.Feedback.Damage();scope.Feedback.Advance(.04f);
             Capture(camera,canvas,"03-miss");
             scope.Feedback.Clear();data.Phase=GamePhase.Finished;scope.UI.Refresh(data,scope.Config);scope.Result.Show(data);

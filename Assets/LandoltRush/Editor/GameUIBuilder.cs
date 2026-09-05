@@ -99,9 +99,8 @@ namespace LandoltRush.Editor
             scope.Feedback.Border=Full("Damage border",frame).gameObject.AddComponent<DamageBorderGraphic>();
             scope.Feedback.Border.raycastTarget=false;scope.Feedback.Border.color=Color.clear;
             scope.Feedback.Popup=Text("Miss",frame,"",500,675,600,54,32,new Color(.83f,.17f,.15f,0));
-            scope.Feedback.Burst=new GameObject("Success pulse").AddComponent<LineRenderer>();
-            scope.Feedback.Burst.sharedMaterial=scope.Rod.View.Shaft.sharedMaterial;scope.Feedback.Burst.widthMultiplier=.022f;scope.Feedback.Burst.sortingOrder=7;
-            scope.Feedback.Burst.positionCount=0;scope.Feedback.Burst.useWorldSpace=true;
+            scope.Feedback.Dive=new GameObject("Success dive").AddComponent<RingDiveViewer>();
+            scope.Feedback.Dive.Param=scope.RingParam;scope.Feedback.Dive.Material=scope.Rod.View.Shaft.sharedMaterial;
             ui.HudRoot.SetActive(false);ui.ComboRoot.SetActive(false);ui.PauseRoot.SetActive(false);scope.Result.Root.SetActive(false);scope.Rod.View.gameObject.SetActive(false);
         }
     }

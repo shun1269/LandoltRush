@@ -6,21 +6,18 @@ namespace LandoltRush
     {
         public Text Popup;
         public DamageBorderGraphic Border;
-        public LineRenderer Burst;
-        float successAge=2,missAge=2;Vector2 origin;
-        static readonly Color Teal=new Color(0,.51f,.44f),Red=new Color(.83f,.17f,.15f);
-        public void Success(Vector2 position){origin=position;successAge=0;Advance(0);}
+        public RingDiveViewer Dive;
+        float missAge=2;
+        static readonly Color Red=new Color(.83f,.17f,.15f);
+        public void Success(Vector2 position,float angle,float scale,Rect bounds)=>Dive.Play(position,angle,scale,bounds);
         public void Damage(){missAge=0;Popup.text="ミス";Advance(0);}
-        public void Clear(){successAge=missAge=2;Popup.text="";Border.color=Color.clear;Burst.positionCount=0;}
+        public void Clear(){missAge=2;Popup.text="";Border.color=Color.clear;Dive.Clear();}
         void Update()=>Advance(Time.unscaledDeltaTime);
         public void Advance(float delta)
         {
-            successAge+=delta;missAge+=delta;float a=Mathf.Clamp01(1-successAge/.55f),damage=Mathf.Clamp01(1-missAge/.55f);
+            Dive.Advance(delta);missAge+=delta;float damage=Mathf.Clamp01(1-missAge/.55f);
             Popup.color=new Color(Red.r,Red.g,Red.b,Mathf.Clamp01(1-missAge/.7f));
             Border.color=new Color(Red.r,Red.g,Red.b,.65f*damage*damage);
-            Burst.positionCount=a>0?64:0;Burst.loop=true;
-            Burst.startColor=Burst.endColor=new Color(Teal.r,Teal.g,Teal.b,a*.5f);
-            for(int i=0;i<Burst.positionCount;i++)Burst.SetPosition(i,origin+RingGeometry.Polar(.2f+successAge*2.2f,i*360f/64));
         }
     }
 }

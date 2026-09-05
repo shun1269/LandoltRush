@@ -5,6 +5,7 @@ namespace LandoltRush
     public sealed class RingViewer : MonoBehaviour
     {
         Mesh mesh;
+        MaterialPropertyBlock tint;
         public void Build(RingParam param)
         {
             ReleaseMesh();
@@ -24,8 +25,12 @@ namespace LandoltRush
             var colors=new Color[vertices.Length];for(int i=0;i<colors.Length;i++)colors[i]=Color.white;
             mesh.vertices=vertices;mesh.colors=colors;mesh.triangles=triangles;mesh.RecalculateBounds();
             GetComponent<MeshFilter>().sharedMesh=mesh;
-            var block=new MaterialPropertyBlock();block.SetColor("_Color",param.Ink);
-            GetComponent<MeshRenderer>().SetPropertyBlock(block);
+            SetColor(param.Ink);
+        }
+        public void SetColor(Color color)
+        {
+            if(tint==null)tint=new MaterialPropertyBlock();
+            tint.SetColor("_Color",color);GetComponent<MeshRenderer>().SetPropertyBlock(tint);
         }
         void ReleaseMesh(){if(mesh!=null){if(Application.isPlaying)Destroy(mesh);else DestroyImmediate(mesh);}}
         void OnDestroy()=>ReleaseMesh();

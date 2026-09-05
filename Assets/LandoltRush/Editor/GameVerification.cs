@@ -67,30 +67,29 @@ namespace LandoltRush.Editor
             Check(Mathf.Approximately(RingSpawnSystem.VisibleTravelTime(bounds,new Vector2(0,6),new Vector2(0,-2),1),3.5f),"Vertical fully visible travel time");
             Check(Mathf.Approximately(RingSpawnSystem.VisibleTravelTime(new Rect(-5,-5,10,10),new Vector2(-6,-6),new Vector2(2,2),1),4),"Diagonal fully visible travel time");
             Check(RingSpawnSystem.VisibleTravelTime(bounds,Vector2.zero,Vector2.zero,1)==0,"Stationary travel has no finite passage");
+            Check(spawn.MinVisibleRotations==2&&spawn.MinRotateSpeed==180&&spawn.MaxRotateSpeed==240,"Two visible turns with baseline rotation 180-240");
             for(int i=0;i<500;i++)
             {
                 var d=system.Create(bounds);if(d.Side==SpawnSide.Top)top++;else left++;
                 Check(bounds.Contains(d.Target),"Target inside screen");
                 Check(d.Side==SpawnSide.Top?d.Position.y-ring.OuterRadius*d.Scale>bounds.yMax:d.Position.x+ring.OuterRadius*d.Scale<bounds.xMin,"Fully offscreen spawn");
                 Check(Vector2.Dot(d.Target-d.Position,d.Velocity)>0,"Moves towards target");
-                Check(d.Scale>=1.2f&&d.Scale<=1.6f&&Mathf.Abs(d.AngularVelocity)>=180,"Larger minimum size and faster minimum rotation");
+                Check(d.Scale>=1.2f&&d.Scale<=1.6f&&Mathf.Abs(d.AngularVelocity)>=180,"Size and minimum rotation unchanged");
+                float required=720f/RingSpawnSystem.VisibleTravelTime(bounds,d.Position,d.Velocity,ring.OuterRadius*d.Scale);
+                Check(Mathf.Abs(d.AngularVelocity)<=Mathf.Max(240,required)+.001f,"Only two-turn requirement can exceed 240 degrees per second");
                 VerifyVisibleRotations(d,bounds,ring.OuterRadius*d.Scale);
+                Check(d.Velocity.magnitude>=1.4999f&&d.Velocity.magnitude<=3.0001f,"Movement speed remains unchanged");
             }
             Check(top>150&&left>150,"Both spawn sides");
-            // Even a low Inspector maximum must not defeat the three-turn requirement.
-            spawn.MinRotateSpeed=30;spawn.MaxRotateSpeed=30;spawn.MinMoveSpeed=3;spawn.MaxMoveSpeed=3;
-            for(int i=0;i<20;i++)
-            {
-                var d=system.Create(bounds);Check(Mathf.Abs(d.AngularVelocity)>30,"Travel requirement overrides configured rotation maximum");
-                VerifyVisibleRotations(d,bounds,ring.OuterRadius*d.Scale);
-            }
+            spawn.MinVisibleRotations=0;spawn.MinRotateSpeed=30;spawn.MaxRotateSpeed=30;
+            Check(Mathf.Approximately(Mathf.Abs(system.Create(bounds).AngularVelocity),30),"Zero minimum turns disables travel correction");
             var ringObject=new GameObject("Entry verification");var comp=ringObject.AddComponent<LandoltRingComponent>();comp.Viewer=ringObject.AddComponent<RingViewer>();
             comp.Initialize(new RingSpawnData{Position=new Vector2(-10,0),Velocity=new Vector2(4,0),Scale=1},ring);
             comp.CheckExit(bounds);Check(!comp.Entered&&!comp.Resolved,"No premature miss at spawn");comp.Advance(1);comp.CheckExit(bounds);Check(comp.Entered&&!comp.Resolved,"Entry state");
             comp.Advance(5);comp.CheckExit(bounds);Check(comp.Resolved,"Miss after fully exiting");
             VerifyMultipleRings();
             UnityEngine.Object.DestroyImmediate(ringObject);UnityEngine.Object.DestroyImmediate(obj);UnityEngine.Object.DestroyImmediate(config);UnityEngine.Object.DestroyImmediate(spawn);UnityEngine.Object.DestroyImmediate(ring);
-            Directory.CreateDirectory("Builds");File.WriteAllText("Builds/verification.txt",$"PASS — {checks} assertions\nMinimum scale 1.2, at least three fully visible rotations across 520 sampled trajectories, travel-time boundaries and rotation-limit override.\nThree lives, contact/escape damage, duplicate prevention, final-life transition, restart, Japanese UI/glyphs, hearts, combo background, swept collisions and timed multi-ring spawns.\n");
+            Directory.CreateDirectory("Builds");File.WriteAllText("Builds/verification.txt",$"PASS — {checks} assertions\nMinimum scale 1.2, at least two fully visible turns across 500 sampled trajectories, baseline rotation 180-240 degrees per second, travel correction and unchanged movement speeds.\nSuccess dive: actual capture, shape/orientation, screen-filling expansion, fade, overlapping captures, bounded reuse, expiry and restart/title cleanup.\nThree lives, contact/escape damage, duplicate prevention, final-life transition, restart, Japanese UI/glyphs, hearts, combo background, swept collisions and timed multi-ring spawns.\n");
             Debug.Log($"LANDOLT_TESTS_PASSED: {checks}");
         }
         static void VerifyVisibleRotations(RingSpawnData data,Rect bounds,float radius)
@@ -103,7 +102,7 @@ namespace LandoltRush.Editor
                 if(p.x-radius>=bounds.xMin&&p.x+radius<=bounds.xMax&&p.y-radius>=bounds.yMin&&p.y+radius<=bounds.yMax)visibleSteps++;
             }
             Check(visibleSteps>0,"Generated ring fully enters viewport");
-            Check((visibleSteps+2)*step*Mathf.Abs(data.AngularVelocity)>=1080f,"At least three fully visible turns (two sample tolerance)");
+            Check((visibleSteps+2)*step*Mathf.Abs(data.AngularVelocity)>=720f,"At least two fully visible turns (two sample tolerance)");
         }
         static bool Shaft(Vector2 pivot,Vector2 from,Vector2 to,float turn=0)=>RingGeometry.SweepShaft(pivot,pivot,from,to,.018f,Vector2.zero,Vector2.zero,0,turn,1,.55f,.9f,50);
         static void VerifyMultipleRings()
@@ -136,6 +135,44 @@ namespace LandoltRush.Editor
             }
             VerifySpawnSchedule(scope);
             VerifyLivesAndUI(scope);
+            VerifySuccessDive(scope);
+        }
+        static void VerifySuccessDive(GameLifetimeScope scope)
+        {
+            var data=scope.Data;var config=scope.Config;var rod=scope.Rod;var dive=scope.Feedback.Dive;
+            Check(dive!=null&&dive.Param==scope.RingParam&&dive.Material!=null,"Success dive scene references");
+            using(var p=new GameMainPresentator(data,config,scope.RodParam,scope.RingParam,rod,scope.Collision,scope.Spawner,
+                scope.UI,scope.Result,scope.Input,scope.Feedback,scope.Sound,new RingSpawnSystem(scope.SpawnParam,scope.RingParam),
+                new ComboSystem(data,config),new ScoreSystem(data,config),new GameJudgeSystem(data,config),scope.Title,new SpawnTempoSystem(data,config)))
+            {
+                p.Start();scope.Input.Emit(GameCommand.Start);
+                Vector2 origin=new Vector2(2,.3f),direction=(rod.Pivot-origin).normalized;
+                float angle=Mathf.Atan2(direction.y,direction.x)*Mathf.Rad2Deg;
+                rod.TestPosition=origin+direction*2;rod.SetActive(true,scope.RodParam);
+                p.Spawn(new RingSpawnData{Position=origin,Scale=1.2f,Angle=angle});
+                rod.TestPosition=origin+direction*.5f;p.Step(0);
+                Check(data.Score==100&&data.Lives==3&&scope.Spawner.Rings.Count==0,"Successful capture scores and removes gameplay ring");
+                Check(dive.ActiveCount==1,"Actual success starts a dive");
+                var copy=dive.GetComponentInChildren<RingViewer>();
+                Check((Vector2)copy.transform.position==origin&&Mathf.Approximately(copy.transform.localScale.x,1.2f)&&Mathf.Abs(Mathf.DeltaAngle(copy.transform.eulerAngles.z,angle))<.01f,"Dive inherits position, size and gap orientation");
+                Check(copy.GetComponent<MeshFilter>().sharedMesh.vertexCount==(RingGeometry.Segments+1)*2,"Dive preserves C-shaped ring mesh");
+                scope.Feedback.Advance(.3f);
+                Check(copy.transform.localScale.x>3&&(Vector2)copy.transform.position==Vector2.Lerp(origin,rod.Bounds.center,.5f),"Dive expands towards screen centre");
+                var tint=new MaterialPropertyBlock();copy.GetComponent<MeshRenderer>().GetPropertyBlock(tint);
+                Check(tint.GetColor("_Color").a>0&&tint.GetColor("_Color").a<1,"Expanded ring fades instead of blocking view");
+                scope.Feedback.Success(new Vector2(-3,1),90,1.6f,rod.Bounds);
+                Check(dive.ActiveCount==2,"Consecutive successes overlap without cancelling");
+                Check(dive.GetComponentsInChildren<Collider2D>(true).Length==0&&scope.Spawner.Rings.Count==0,"Visual copies have no gameplay collision");
+                scope.Feedback.Advance(.29f);
+                float inner=scope.RingParam.InnerRadius*copy.transform.localScale.x;
+                Check(inner>rod.Bounds.size.magnitude*.5f,"Inner opening passes all viewport corners");
+                scope.Feedback.Advance(.4f);Check(dive.ActiveCount==0,"Success visuals expire");
+                for(int i=0;i<32;i++)scope.Feedback.Success(origin,angle,1.2f,rod.Bounds);
+                Check(dive.ActiveCount==16&&dive.transform.childCount==16,"Rapid combos reuse a bounded effect pool");
+                scope.Input.Emit(GameCommand.Restart);Check(dive.ActiveCount==0,"Restart clears all success visuals");
+                scope.Feedback.Success(origin,angle,1.2f,rod.Bounds);scope.Input.Emit(GameCommand.Title);
+                Check(dive.ActiveCount==0,"Returning to title clears success visuals");rod.TestPosition=null;
+            }
         }
         static void VerifySpawnSchedule(GameLifetimeScope scope)
         {

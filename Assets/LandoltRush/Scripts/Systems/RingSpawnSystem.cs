@@ -18,7 +18,7 @@ namespace LandoltRush
             Vector2 target = bounds.center + new Vector2(Range(-bounds.width, bounds.width), Range(-bounds.height, bounds.height)) * (.5f * param.TargetAreaRate);
             Vector2 velocity = (target - spawn).normalized * Range(param.MinMoveSpeed, param.MaxMoveSpeed);
             float duration = VisibleTravelTime(bounds, spawn, velocity, ring.OuterRadius * scale);
-            float minimumRotation = Mathf.Max(param.MinRotateSpeed, 1080f / Mathf.Max(.001f, duration));
+            float minimumRotation = Mathf.Max(param.MinRotateSpeed, 360f * Mathf.Max(0, param.MinVisibleRotations) / Mathf.Max(.001f, duration));
             return new RingSpawnData { Side = top ? SpawnSide.Top : SpawnSide.Left, Position = spawn, Target = target,
                 Velocity = velocity, Scale = scale,
                 Angle = Range(0, 360), AngularVelocity = Range(minimumRotation, Mathf.Max(minimumRotation, param.MaxRotateSpeed)) * (random.Next(2) == 0 ? -1 : 1) };
