@@ -1,0 +1,2 @@
+PASS — 2025 assertions
+Geometry, swept tip, moving / rotating ring, priority, score, combo, spawn, miss, restart, title.

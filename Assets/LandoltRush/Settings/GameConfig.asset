@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed35fa4ea8ba7cb4d8756ea838b69308, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: 
+  BaseScore: 100
+  ComboBonusScore: 20
+  ComboLimitTime: 2
+  FirstSpawnDelay: 0.6
+  SuccessSpawnDelay: 0.28
+  MissSpawnDelay: 0.4
