@@ -10,6 +10,6 @@ namespace LandoltRush
         public float MinMoveSpeed = 1.5f, MaxMoveSpeed = 3f;
         public float MinScale = 1.2f, MaxScale = 1.6f;
         [Tooltip("Degrees per second. Raised automatically when needed for three visible turns.")]
-        public float MinRotateSpeed = 180f, MaxRotateSpeed = 360f;
+        public float MinRotateSpeed = 180f, MaxRotateSpeed = 240f;
     }
 }

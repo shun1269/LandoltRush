@@ -22,4 +22,4 @@ MonoBehaviour:
   MinScale: 1.2
   MaxScale: 1.6
   MinRotateSpeed: 180
-  MaxRotateSpeed: 360
+  MaxRotateSpeed: 240
