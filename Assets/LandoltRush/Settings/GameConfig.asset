@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BaseScore: 100
   ComboBonusScore: 20
-  ComboLimitTime: 2
+  ComboLimitTime: 6
   FirstSpawnDelay: 0.6
-  SuccessSpawnDelay: 0.28
-  MissSpawnDelay: 0.4
+  InitialSpawnInterval: 4
+  MinimumSpawnInterval: 0.9
+  SpawnRampSeconds: 90
+  MaxConcurrentRings: 12

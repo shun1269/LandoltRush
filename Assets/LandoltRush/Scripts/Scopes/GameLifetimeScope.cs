@@ -17,6 +17,7 @@ namespace LandoltRush
             builder.RegisterComponent(Sound);builder.RegisterComponent(Title);
             builder.Register<RingSpawnSystem>(Lifetime.Scoped);builder.Register<ScoreSystem>(Lifetime.Scoped);
             builder.Register<ComboSystem>(Lifetime.Scoped);builder.Register<GameJudgeSystem>(Lifetime.Scoped);
+            builder.Register<SpawnTempoSystem>(Lifetime.Scoped);
             builder.RegisterEntryPoint<GameMainPresentator>().AsSelf();
         }
     }

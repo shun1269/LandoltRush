@@ -3105,7 +3105,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: "MOUSE TO AIM     \xB7     ONLY THE TIP COUNTS"
+  m_Text: "MOUSE TO AIM     \xB7     MORE RINGS. LESS TIME. STAY CLEAR."
 --- !u!222 &276705667
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -14386,7 +14386,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: AIM FOR THE GAP
+  m_Text: REACH INSIDE THE RING / KEEP THE SHAFT CLEAR
 --- !u!222 &1134090829
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -22048,10 +22048,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 'Guide the tip into the opening.
+  m_Text: 'Reach the inner circle through the gap.
 
-    Touch the black ring and the run
-    ends.'
+    Shaft contact: MISS. Tip contact: GAME OVER.'
 --- !u!222 &1733143150
 CanvasRenderer:
   m_ObjectHideFlags: 0

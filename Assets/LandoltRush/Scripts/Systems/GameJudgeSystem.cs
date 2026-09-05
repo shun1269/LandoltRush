@@ -9,6 +9,7 @@ namespace LandoltRush
             data.Phase = GamePhase.Playing; data.Result = ResultType.None;
             data.Score = data.ComboCount = data.MaxCombo = data.SuccessCount = data.MissCount = 0;
             data.ComboRemainingTime = 0;
+            data.ElapsedPlayTime = 0;
         }
         public bool Finish()
         {

@@ -103,10 +103,10 @@ namespace LandoltRush.Editor
             Label("Title line 1",title,"LANDOLT",70,218,850,105,96,Ink).fontStyle=FontStyle.Bold;
             Label("Title line 2",title,"RUSH",70,317,700,118,112,Ink).fontStyle=FontStyle.Bold;
             Label("Tagline",title,"Find the gap. Keep the flow.",78,466,760,48,28,Ink);
-            Label("Description",title,"Guide the tip into the opening.\nTouch the black ring and the run ends.",78,530,700,70,21,Muted);
+            Label("Description",title,"Reach the inner circle through the gap.\nShaft contact: MISS. Tip contact: GAME OVER.",78,530,700,70,21,Muted);
             input.StartButton=Button("StartButton",title,"START RUN     →",80,650,320,66,true);
             Label("Start shortcut",title,"ENTER / SPACE",424,665,350,36,16,Muted);
-            Label("Title footer",title,"MOUSE TO AIM     ·     ONLY THE TIP COUNTS",80,814,980,34,17,Muted);
+            Label("Title footer",title,"MOUSE TO AIM     ·     MORE RINGS. LESS TIME. STAY CLEAR.",80,814,980,34,17,Muted);
             input.QuitButton=Button("QuitButton",title,"QUIT",1380,806,130,44,false);
             var hud=Full("HUD",design);ui.HudRoot=hud.gameObject;
             Box("Header background",hud,0,0,1600,122,new Color(Paper.r,Paper.g,Paper.b,.96f));
@@ -119,7 +119,7 @@ namespace LandoltRush.Editor
             var fill=Full("Combo gauge",track.transform);ui.Gauge=fill.gameObject.AddComponent<Image>();ui.Gauge.color=Teal;ui.Gauge.raycastTarget=false;
             input.PauseButton=Button("PauseButton",hud,"II",1450,43,60,48,false);
             Box("Footer background",hud,0,827,1600,73,new Color(Paper.r,Paper.g,Paper.b,.96f));
-            ui.StatusText=Label("Status",hud,"AIM FOR THE GAP",66,843,890,30,18,Teal);
+            ui.StatusText=Label("Status",hud,"REACH INSIDE THE RING / KEEP THE SHAFT CLEAR",66,843,890,30,18,Teal);
             Label("Keys",hud,"ESC  PAUSE     /     R  RESTART",1070,843,480,30,16,Muted,TextAnchor.MiddleRight);
             var flash=Full("Flash",design);scope.Feedback.Flash=flash.gameObject.AddComponent<Image>();scope.Feedback.Flash.raycastTarget=false;scope.Feedback.Flash.color=Color.clear;
             scope.Feedback.Popup=Label("Feedback",design,"",500,175,600,52,28,Teal,TextAnchor.MiddleCenter);

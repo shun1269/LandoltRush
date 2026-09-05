@@ -7,5 +7,6 @@ namespace LandoltRush
         public float RightPivotMargin = 2;
         public float BottomPivotMargin = 2;
         [Min(.01f)] public float TipRadius = .045f;
+        [Min(.001f)] public float ShaftRadius = .018f;
     }
 }
