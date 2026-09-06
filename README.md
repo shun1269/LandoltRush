@@ -23,7 +23,7 @@ Unityでのコンパイルとゲームルールの検証記録は `Documentation
 
 **ライフはハート3つ。** 先端・胴体の黒い部分への接触、または環の見逃しで「ミス」となり、ライフを1つ失います。画面の縁が一瞬赤くなり、コンボが切れます。スコアは減りません。ライフが0になると終了します。同じ環では二重にダメージを受けません。
 
-画面中央の背景に大きくコンボ数を表示し、その下のゲージで残り時間を示します。結果画面にはスコアと最大コンボだけを表示します。UIはタイトルの「Landolt Rush」を除いて日本語です。
+画面中央の背景に大きくコンボ数を表示し、その下のゲージで残り時間を示します。コンボが増えるたびに数字が一瞬1.3倍になり、色を少し濃くして約0.24秒で元に戻ります。結果画面にはスコアと最大コンボだけを表示します。UIはタイトルの「Landolt Rush」を除いて日本語です。タイトル画面の環は時計回りに毎秒30度の一定速度で回転します。
 
 成功すると、取った環が切れ目の向きとサイズを引き継ぎ、約0.6秒で画面中央へ寄りながら加速して拡大します。黒から青緑へ変わり、環の内側が画面全体を包んで外へ抜けることで、環へ入り込む感覚を演出します。連続取得では演出が重なります。演出には当たり判定がなく、再挑戦・タイトルへ戻る際に消去します。
 
@@ -35,7 +35,7 @@ Unityでのコンパイルとゲームルールの検証記録は `Documentation
 
 ## プロジェクト
 
-画面プレビュー（表示確認用のサンプル値）：[タイトル](Documentation/Previews/01-title.png) / [プレイ中](Documentation/Previews/02-playing.png) / [ミス](Documentation/Previews/03-miss.png) / [リザルト](Documentation/Previews/04-result.png) / [成功演出](Documentation/Previews/05-success.gif)
+画面プレビュー（表示確認用のサンプル値）：[タイトル](Documentation/Previews/01-title.png) / [プレイ中](Documentation/Previews/02-playing.png) / [ミス](Documentation/Previews/03-miss.png) / [リザルト](Documentation/Previews/04-result.png) / [成功演出](Documentation/Previews/05-success.gif) / [コンボ演出](Documentation/Previews/06-combo.gif)
 
 - Unity **6000.0.51f1** / Universal Render Pipeline 2D
 - VContainer **1.16.8**: `Packages/jp.hadashikick.vcontainer` に公式ソースを同梱

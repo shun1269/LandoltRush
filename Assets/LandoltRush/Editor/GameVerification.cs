@@ -89,7 +89,7 @@ namespace LandoltRush.Editor
             comp.Advance(5);comp.CheckExit(bounds);Check(comp.Resolved,"Miss after fully exiting");
             VerifyMultipleRings();
             UnityEngine.Object.DestroyImmediate(ringObject);UnityEngine.Object.DestroyImmediate(obj);UnityEngine.Object.DestroyImmediate(config);UnityEngine.Object.DestroyImmediate(spawn);UnityEngine.Object.DestroyImmediate(ring);
-            Directory.CreateDirectory("Builds");File.WriteAllText("Builds/verification.txt",$"PASS — {checks} assertions\nMinimum scale 1.2, at least two fully visible turns across 500 sampled trajectories, baseline rotation 180-240 degrees per second, travel correction and unchanged movement speeds.\nSuccess dive: actual capture, shape/orientation, screen-filling expansion, fade, overlapping captures, bounded reuse, expiry and restart/title cleanup.\nThree lives, contact/escape damage, duplicate prevention, final-life transition, restart, Japanese UI/glyphs, hearts, combo background, swept collisions and timed multi-ring spawns.\n");
+            Directory.CreateDirectory("Builds");File.WriteAllText("Builds/verification.txt",$"PASS — {checks} assertions\nConstant title rotation; immediate combo enlargement, eased return, rapid retrigger and reset cleanup.\nMinimum scale 1.2, at least two fully visible turns across 500 sampled trajectories, baseline rotation 180-240 degrees per second, travel correction and unchanged movement speeds.\nSuccess dive: actual capture, shape/orientation, screen-filling expansion, fade, overlapping captures, bounded reuse, expiry and restart/title cleanup.\nThree lives, contact/escape damage, duplicate prevention, final-life transition, restart, Japanese UI/glyphs, hearts, combo background, swept collisions and timed multi-ring spawns.\n");
             Debug.Log($"LANDOLT_TESTS_PASSED: {checks}");
         }
         static void VerifyVisibleRotations(RingSpawnData data,Rect bounds,float radius)
@@ -136,6 +136,36 @@ namespace LandoltRush.Editor
             VerifySpawnSchedule(scope);
             VerifyLivesAndUI(scope);
             VerifySuccessDive(scope);
+            VerifyTitleAndComboMotion(scope);
+        }
+        static void VerifyTitleAndComboMotion(GameLifetimeScope scope)
+        {
+            var title=scope.Title;var ring=title.Ring.transform;
+            ring.rotation=Quaternion.Euler(0,0,-25);
+            for(int i=0;i<4;i++)
+            {
+                float before=ring.eulerAngles.z;title.Advance(.5f);
+                Check(Mathf.Abs(Mathf.DeltaAngle(before,ring.eulerAngles.z)+15)<.001f,"Title rotates clockwise at a constant 30 degrees per second");
+            }
+            float angle=ring.eulerAngles.z;title.Advance(12);
+            Check(Mathf.Abs(Mathf.DeltaAngle(angle,ring.eulerAngles.z))<.001f,"Title completes a full turn without reversing");
+            var data=scope.Data;var ui=scope.UI;var config=scope.Config;
+            data.Phase=GamePhase.Playing;data.ComboCount=0;ui.Refresh(data,config);
+            data.ComboCount=1;ui.Refresh(data,config);
+            Check(ui.ComboText.text=="1"&&ui.ComboText.rectTransform.localScale.x>1.2f,"New combo number immediately pops larger");
+            float peak=ui.ComboText.rectTransform.localScale.x;ui.Advance(.08f);
+            float shrinking=ui.ComboText.rectTransform.localScale.x;
+            Check(shrinking>1&&shrinking<peak,"Combo pulse quickly eases towards normal size");
+            ui.Refresh(data,config);
+            Check(Mathf.Approximately(ui.ComboText.rectTransform.localScale.x,shrinking),"Unchanged combo does not retrigger pulse each frame");
+            data.ComboCount=2;ui.Refresh(data,config);
+            Check(Mathf.Approximately(ui.ComboText.rectTransform.localScale.x,peak),"Rapid next combo retriggers full pulse without accumulating scale");
+            ui.Advance(.3f);Check(ui.ComboText.rectTransform.localScale==Vector3.one,"Combo settles back to original size");
+            data.ComboCount=3;ui.Refresh(data,config);data.ComboCount=0;ui.Refresh(data,config);
+            Check(ui.ComboText.rectTransform.localScale==Vector3.one,"Miss clears pulse immediately");
+            data.ComboCount=4;ui.Refresh(data,config);data.Phase=GamePhase.Title;ui.Refresh(data,config);
+            Check(ui.ComboText.rectTransform.localScale==Vector3.one,"Returning to title clears pulse");
+            data.ComboCount=0;ui.Refresh(data,config);
         }
         static void VerifySuccessDive(GameLifetimeScope scope)
         {

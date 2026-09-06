@@ -33,11 +33,20 @@ namespace LandoltRush.Editor
             scope.Feedback.Clear();data.Phase=GamePhase.Title;scope.UI.Refresh(data,scope.Config);scope.UI.Sound(false);
             Capture(camera,canvas,"01-title");
             scope.Title.gameObject.SetActive(false);data.Phase=GamePhase.Playing;data.Lives=3;data.Score=1680;data.ComboCount=12;data.MaxCombo=12;data.ComboRemainingTime=4.2f;
-            scope.UI.Refresh(data,scope.Config);
+            scope.UI.Refresh(data,scope.Config);scope.UI.Advance(1);
             var captured=scope.Spawner.Spawn(new RingSpawnData{Position=new Vector2(2,.3f),Scale=scope.SpawnParam.MinScale,Angle=-30},scope.RingParam);
             scope.Spawner.Spawn(new RingSpawnData{Position=new Vector2(-3,1.5f),Scale=scope.SpawnParam.MaxScale,Angle=-75},scope.RingParam);
             scope.Rod.TestPosition=new Vector2(2.8f,-.2f);scope.Rod.SetActive(true,scope.RodParam);
             Capture(camera,canvas,"02-playing");
+            data.ComboCount=13;scope.UI.Refresh(data,scope.Config);
+            Directory.CreateDirectory("Builds/UIPreviews/ComboPulse");
+            for(int i=0;i<=14;i++)
+            {
+                if(i>0)scope.UI.Advance(.02f);
+                scope.UI.Refresh(data,scope.Config);
+                Capture(camera,canvas,"ComboPulse/frame-"+i.ToString("D2"));
+            }
+            data.ComboCount=12;scope.UI.Refresh(data,scope.Config);scope.UI.Advance(1);
             scope.Feedback.Success(captured.Position,captured.Angle,captured.Scale,scope.Rod.Bounds);scope.Spawner.Remove(captured);
             Directory.CreateDirectory("Builds/UIPreviews/SuccessDive");
             for(int i=0;i<=30;i++)
